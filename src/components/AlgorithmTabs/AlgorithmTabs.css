@@ -1,0 +1,29 @@
+.algorithm-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  background: #1a1a2e;
+  border-bottom: 1px solid #2d3748;
+}
+
+.tab-btn {
+  padding: 8px 20px;
+  background: #2d3748;
+  border: 1px solid #4a5568;
+  border-radius: 6px;
+  color: #a0aec0;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: #4a5568;
+  color: #e2e8f0;
+}
+
+.tab-btn.active {
+  background: #3182ce;
+  border-color: #3182ce;
+  color: white;
+}

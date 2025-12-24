@@ -1,0 +1,64 @@
+.canvas-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0f1419 0%, #1a1a2e 100%);
+  border-radius: 8px;
+  border: 1px solid #2d3748;
+  overflow: hidden;
+  position: relative;
+}
+
+.canvas-header {
+  padding: 10px 16px;
+  background: rgba(22, 33, 62, 0.8);
+  border-bottom: 1px solid #2d3748;
+}
+
+.step-description {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.canvas-svg {
+  flex: 1;
+  cursor: grab;
+}
+
+.canvas-svg:active {
+  cursor: grabbing;
+}
+
+.canvas-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  color: #4a5568;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* D3 元素样式 */
+.main-group {
+  transition: transform 0.1s ease-out;
+}
+
+.input-node,
+.result-node {
+  cursor: pointer;
+}
+
+.input-node circle,
+.result-node circle {
+  transition: all 0.3s ease;
+}
+
+.input-node:hover circle,
+.result-node:hover circle {
+  filter: brightness(1.2);
+}
+
+.annotation {
+  pointer-events: none;
+}
