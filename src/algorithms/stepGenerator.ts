@@ -1,4 +1,4 @@
-import type { AlgorithmStep, AlgorithmType, VisualNode, VisualEdge } from '../types';
+import type { AlgorithmStep, AlgorithmType, VisualNode, VisualEdge, Annotation } from '../types';
 
 // const COLORS = {
 //   default: '#4A90A4',
@@ -57,6 +57,16 @@ function createVisualEdge(
   };
 }
 
+// 布局常量 - 更松散的间距
+const LAYOUT = {
+  nodeSpacing: 120,      // 节点水平间距 (原 80)
+  listSpacing: 140,      // 链表垂直间距 (原 100)
+  resultNodeSpacing: 100, // 结果节点间距 (原 70)
+  startX: 150,           // 起始X位置 (原 100)
+  startY: 100,           // 起始Y位置 (原 80)
+  resultY: 450,          // 结果链表Y位置 (原 400)
+};
+
 // 计算链表布局
 function calculateListLayout(
   lists: number[][],
@@ -107,25 +117,51 @@ export function generateSequentialSteps(lists: number[][]): AlgorithmStep[] {
     return steps;
   }
   
-  const { nodes: initialNodes, edges: initialEdges } = calculateListLayout(lists, 100, 80, 80, 100);
+  const { nodes: initialNodes, edges: initialEdges } = calculateListLayout(
+    lists, LAYOUT.startX, LAYOUT.startY, LAYOUT.nodeSpacing, LAYOUT.listSpacing
+  );
   
-  // 初始状态
+  // 初始状态 - 添加更详细的算法思路说明
+  const initNodes = JSON.parse(JSON.stringify(initialNodes));
+  // 为每个链表的头节点添加标签
+  initNodes.forEach((node: VisualNode) => {
+    if (node.nodeIndex === 0) {
+      node.label = `lists[${node.listIndex}]`;
+    }
+  });
+  
   steps.push({
     id: steps.length,
     description: '初始化：准备合并 ' + lists.length + ' 个升序链表',
-    nodes: JSON.parse(JSON.stringify(initialNodes)),
+    nodes: initNodes,
     edges: JSON.parse(JSON.stringify(initialEdges)),
     resultNodes: [],
     resultEdges: [],
     highlightedLines: { java: [3], python: [3], golang: [3], javascript: [2] },
     variables: { ans: 'null', i: '0' },
-    annotations: [{
-      id: 'init',
-      text: '开始顺序合并',
-      x: 50,
-      y: 30,
-      type: 'info',
-    }],
+    annotations: [
+      {
+        id: 'init-title',
+        text: '📋 顺序合并算法',
+        x: 50,
+        y: 20,
+        type: 'info',
+      },
+      {
+        id: 'init-desc1',
+        text: '思路：依次将每个链表合并到结果中',
+        x: 50,
+        y: 45,
+        type: 'info',
+      },
+      {
+        id: 'init-desc2',
+        text: `共 ${lists.length} 个链表，需要 ${lists.length} 轮合并`,
+        x: 50,
+        y: 70,
+        type: 'info',
+      },
+    ],
   });
   
   // 模拟合并过程
@@ -136,32 +172,70 @@ export function generateSequentialSteps(lists: number[][]): AlgorithmStep[] {
     const currentList = lists[i];
     processedLists.push(currentList);
     
-    // 合并前状态
+    // 合并前状态 - 添加更详细的说明
     const beforeNodes = JSON.parse(JSON.stringify(initialNodes));
     beforeNodes.forEach((node: VisualNode) => {
       if (node.listIndex === i) {
         node.isHighlighted = true;
+        // 为当前链表的头节点添加 bPtr 标签
+        if (node.nodeIndex === 0) {
+          node.label = 'bPtr →';
+        }
       } else if (node.listIndex < i) {
         node.isProcessed = true;
       }
     });
     
+    // 计算当前轮次的说明
+    const roundDesc = i === 0 
+      ? `第 1 轮：将第 1 个链表作为初始结果`
+      : `第 ${i + 1} 轮：将 ans 与第 ${i + 1} 个链表合并`;
+    
+    const annotations: Annotation[] = [
+      {
+        id: `round-${i}`,
+        text: `🔄 第 ${i + 1}/${lists.length} 轮合并`,
+        x: 50,
+        y: 20,
+        type: 'info',
+      },
+      {
+        id: `merge-target-${i}`,
+        text: `当前链表: [${currentList.join(' → ')}]`,
+        x: LAYOUT.startX + currentList.length * LAYOUT.nodeSpacing + 30,
+        y: LAYOUT.startY + i * LAYOUT.listSpacing,
+        type: 'info',
+      },
+    ];
+    
+    if (result.length > 0) {
+      annotations.push({
+        id: `ans-status-${i}`,
+        text: `已合并结果 ans: [${result.join(' → ')}]`,
+        x: 50,
+        y: 45,
+        type: 'result',
+      });
+    } else {
+      annotations.push({
+        id: `ans-status-${i}`,
+        text: 'ans = null（首次合并）',
+        x: 50,
+        y: 45,
+        type: 'info',
+      });
+    }
+    
     steps.push({
       id: steps.length,
-      description: `第 ${i + 1} 轮：准备合并第 ${i + 1} 个链表 [${currentList.join(', ')}]`,
+      description: roundDesc,
       nodes: beforeNodes,
       edges: JSON.parse(JSON.stringify(initialEdges)),
-      resultNodes: createResultNodes(result, 100, 400),
+      resultNodes: createResultNodes(result, LAYOUT.startX, LAYOUT.resultY),
       resultEdges: createResultEdges(result.length),
       highlightedLines: { java: [4, 5], python: [4, 5], golang: [4, 5], javascript: [3, 4] },
       variables: { ans: result.length > 0 ? `[${result.join(', ')}]` : 'null', i: String(i) },
-      annotations: [{
-        id: `merge-${i}`,
-        text: `合并第 ${i + 1} 个链表`,
-        x: 100 + currentList.length * 40,
-        y: 80 + i * 100 - 20,
-        type: 'info',
-      }],
+      annotations,
     });
     
     // 执行合并
@@ -174,57 +248,143 @@ export function generateSequentialSteps(lists: number[][]): AlgorithmStep[] {
         if (node.listIndex < i) {
           node.isProcessed = true;
         }
+        // 为当前比较的节点添加指针标签
+        if (node.listIndex === i && node.nodeIndex === p2) {
+          node.isCurrent = true;
+          node.label = `bPtr(${currentList[p2]})`;
+        }
       });
+      
+      // 创建带指针标签的结果节点
+      const resultNodesWithPtr = createResultNodes([...result], LAYOUT.startX, LAYOUT.resultY);
+      if (p1 < result.length && resultNodesWithPtr[p1]) {
+        resultNodesWithPtr[p1].isCurrent = true;
+        resultNodesWithPtr[p1].label = `aPtr(${result[p1]})`;
+      }
+      
+      const compareResult = result[p1] <= currentList[p2];
+      const selectedVal = compareResult ? result[p1] : currentList[p2];
+      const compareSymbol = compareResult ? '≤' : '>';
       
       if (result[p1] <= currentList[p2]) {
         merged.push(result[p1]);
         
+        // 创建新的结果节点，高亮刚添加的节点
+        const newResultNodes = createResultNodes([...merged], LAYOUT.startX, LAYOUT.resultY, merged.length - 1);
+        
         steps.push({
           id: steps.length,
-          description: `比较 ${result[p1]} 和 ${currentList[p2]}，选择较小的 ${result[p1]}`,
+          description: `比较 aPtr(${result[p1]}) ${compareSymbol} bPtr(${currentList[p2]})，选择 ${selectedVal} 加入结果`,
           nodes: mergeNodes,
           edges: JSON.parse(JSON.stringify(initialEdges)),
-          resultNodes: createResultNodes([...merged], 100, 400, merged.length - 1),
+          resultNodes: newResultNodes,
           resultEdges: createResultEdges(merged.length),
           highlightedLines: { java: [16, 17, 18], python: [14, 15, 16], golang: [16, 17, 18], javascript: [14, 15, 16] },
           variables: { 
-            'aPtr.val': String(result[p1]), 
-            'bPtr.val': String(currentList[p2]),
+            'aPtr': `${result[p1]}`,
+            'bPtr': `${currentList[p2]}`,
+            '比较': `${result[p1]} ${compareSymbol} ${currentList[p2]}`,
+            '选择': `${selectedVal}`,
             'merged': `[${merged.join(', ')}]`
           },
-          annotations: [{
-            id: `compare-${steps.length}`,
-            text: `${result[p1]} ≤ ${currentList[p2]}`,
-            x: 300,
-            y: 350,
-            type: 'compare',
-          }],
+          annotations: [
+            {
+              id: `compare-title-${steps.length}`,
+              text: `⚖️ 比较两个指针的值`,
+              x: 50,
+              y: 20,
+              type: 'compare',
+            },
+            {
+              id: `compare-detail-${steps.length}`,
+              text: `aPtr.val(${result[p1]}) ${compareSymbol} bPtr.val(${currentList[p2]})`,
+              x: 50,
+              y: 45,
+              type: 'compare',
+            },
+            {
+              id: `compare-action-${steps.length}`,
+              text: `✓ 选择较小值 ${selectedVal}，aPtr 后移`,
+              x: 50,
+              y: 70,
+              type: 'move',
+            },
+            {
+              id: `ptr-a-${steps.length}`,
+              text: `aPtr →`,
+              x: LAYOUT.startX + p1 * LAYOUT.resultNodeSpacing - 45,
+              y: LAYOUT.resultY - 35,
+              type: 'info',
+            },
+            {
+              id: `ptr-b-${steps.length}`,
+              text: `bPtr →`,
+              x: LAYOUT.startX + p2 * LAYOUT.nodeSpacing - 45,
+              y: LAYOUT.startY + i * LAYOUT.listSpacing - 35,
+              type: 'info',
+            },
+          ],
         });
         
         p1++;
       } else {
         merged.push(currentList[p2]);
         
+        // 创建新的结果节点，高亮刚添加的节点
+        const newResultNodes = createResultNodes([...merged], LAYOUT.startX, LAYOUT.resultY, merged.length - 1);
+        
         steps.push({
           id: steps.length,
-          description: `比较 ${result[p1]} 和 ${currentList[p2]}，选择较小的 ${currentList[p2]}`,
+          description: `比较 aPtr(${result[p1]}) ${compareSymbol} bPtr(${currentList[p2]})，选择 ${selectedVal} 加入结果`,
           nodes: mergeNodes,
           edges: JSON.parse(JSON.stringify(initialEdges)),
-          resultNodes: createResultNodes([...merged], 100, 400, merged.length - 1),
+          resultNodes: newResultNodes,
           resultEdges: createResultEdges(merged.length),
           highlightedLines: { java: [19, 20, 21], python: [17, 18, 19], golang: [19, 20, 21], javascript: [17, 18, 19] },
           variables: { 
-            'aPtr.val': String(result[p1]), 
-            'bPtr.val': String(currentList[p2]),
+            'aPtr': `${result[p1]}`,
+            'bPtr': `${currentList[p2]}`,
+            '比较': `${result[p1]} ${compareSymbol} ${currentList[p2]}`,
+            '选择': `${selectedVal}`,
             'merged': `[${merged.join(', ')}]`
           },
-          annotations: [{
-            id: `compare-${steps.length}`,
-            text: `${result[p1]} > ${currentList[p2]}`,
-            x: 300,
-            y: 350,
-            type: 'compare',
-          }],
+          annotations: [
+            {
+              id: `compare-title-${steps.length}`,
+              text: `⚖️ 比较两个指针的值`,
+              x: 50,
+              y: 20,
+              type: 'compare',
+            },
+            {
+              id: `compare-detail-${steps.length}`,
+              text: `aPtr.val(${result[p1]}) ${compareSymbol} bPtr.val(${currentList[p2]})`,
+              x: 50,
+              y: 45,
+              type: 'compare',
+            },
+            {
+              id: `compare-action-${steps.length}`,
+              text: `✓ 选择较小值 ${selectedVal}，bPtr 后移`,
+              x: 50,
+              y: 70,
+              type: 'move',
+            },
+            {
+              id: `ptr-a-${steps.length}`,
+              text: `aPtr →`,
+              x: LAYOUT.startX + p1 * LAYOUT.resultNodeSpacing - 45,
+              y: LAYOUT.resultY - 35,
+              type: 'info',
+            },
+            {
+              id: `ptr-b-${steps.length}`,
+              text: `bPtr →`,
+              x: LAYOUT.startX + p2 * LAYOUT.nodeSpacing - 45,
+              y: LAYOUT.startY + i * LAYOUT.listSpacing - 35,
+              type: 'info',
+            },
+          ],
         });
         
         p2++;
@@ -232,33 +392,134 @@ export function generateSequentialSteps(lists: number[][]): AlgorithmStep[] {
     }
     
     // 处理剩余元素
-    while (p1 < result.length) {
-      merged.push(result[p1++]);
-    }
-    while (p2 < currentList.length) {
-      merged.push(currentList[p2++]);
-    }
+    const remainingFromResult = p1 < result.length;
+    const remainingFromCurrent = p2 < currentList.length;
     
-    if (p1 < result.length || p2 < currentList.length) {
+    if (remainingFromResult || remainingFromCurrent) {
       const remainingNodes = JSON.parse(JSON.stringify(initialNodes));
       remainingNodes.forEach((node: VisualNode) => {
         if (node.listIndex <= i) {
           node.isProcessed = true;
         }
+        // 标记剩余节点
+        if (node.listIndex === i && node.nodeIndex >= p2) {
+          node.isHighlighted = true;
+        }
       });
+      
+      // 收集剩余元素
+      const remainingElements: number[] = [];
+      if (remainingFromResult) {
+        for (let k = p1; k < result.length; k++) {
+          remainingElements.push(result[k]);
+        }
+      }
+      if (remainingFromCurrent) {
+        for (let k = p2; k < currentList.length; k++) {
+          remainingElements.push(currentList[k]);
+        }
+      }
+      
+      // 将剩余元素添加到 merged
+      while (p1 < result.length) {
+        merged.push(result[p1++]);
+      }
+      while (p2 < currentList.length) {
+        merged.push(currentList[p2++]);
+      }
+      
+      const sourceDesc = remainingFromResult ? 'ans 链表' : `第 ${i + 1} 个链表`;
       
       steps.push({
         id: steps.length,
-        description: '将剩余元素追加到结果链表',
+        description: `${sourceDesc}有剩余元素 [${remainingElements.join(', ')}]，直接追加到结果末尾`,
         nodes: remainingNodes,
         edges: JSON.parse(JSON.stringify(initialEdges)),
-        resultNodes: createResultNodes(merged, 100, 400),
+        resultNodes: createResultNodes(merged, LAYOUT.startX, LAYOUT.resultY),
         resultEdges: createResultEdges(merged.length),
         highlightedLines: { java: [24], python: [21], golang: [27, 28, 29, 30, 31], javascript: [22] },
-        variables: { 'merged': `[${merged.join(', ')}]` },
-        annotations: [],
+        variables: { 
+          '剩余元素': `[${remainingElements.join(', ')}]`,
+          'merged': `[${merged.join(', ')}]` 
+        },
+        annotations: [
+          {
+            id: `remaining-title-${steps.length}`,
+            text: `📎 处理剩余元素`,
+            x: 50,
+            y: 20,
+            type: 'info',
+          },
+          {
+            id: `remaining-desc-${steps.length}`,
+            text: `一方遍历完毕，另一方剩余元素已有序`,
+            x: 50,
+            y: 45,
+            type: 'info',
+          },
+          {
+            id: `remaining-action-${steps.length}`,
+            text: `直接将 [${remainingElements.join(', ')}] 追加到结果`,
+            x: 50,
+            y: 70,
+            type: 'move',
+          },
+        ],
       });
+    } else {
+      // 没有剩余元素的情况，也需要更新 merged
+      while (p1 < result.length) {
+        merged.push(result[p1++]);
+      }
+      while (p2 < currentList.length) {
+        merged.push(currentList[p2++]);
+      }
     }
+    
+    // 本轮合并完成的总结步骤
+    const roundCompleteNodes = JSON.parse(JSON.stringify(initialNodes));
+    roundCompleteNodes.forEach((node: VisualNode) => {
+      if (node.listIndex <= i) {
+        node.isProcessed = true;
+      }
+    });
+    
+    steps.push({
+      id: steps.length,
+      description: `第 ${i + 1} 轮合并完成，ans 更新为 [${merged.join(' → ')}]`,
+      nodes: roundCompleteNodes,
+      edges: JSON.parse(JSON.stringify(initialEdges)),
+      resultNodes: createResultNodes(merged, LAYOUT.startX, LAYOUT.resultY),
+      resultEdges: createResultEdges(merged.length),
+      highlightedLines: { java: [5, 6], python: [5, 6], golang: [4, 5], javascript: [3, 4] },
+      variables: { 
+        'ans': `[${merged.join(', ')}]`,
+        '已完成轮次': `${i + 1}/${lists.length}`
+      },
+      annotations: [
+        {
+          id: `round-complete-${i}`,
+          text: `✅ 第 ${i + 1} 轮合并完成`,
+          x: 50,
+          y: 20,
+          type: 'result',
+        },
+        {
+          id: `round-result-${i}`,
+          text: `ans = [${merged.join(' → ')}]`,
+          x: 50,
+          y: 45,
+          type: 'result',
+        },
+        {
+          id: `round-progress-${i}`,
+          text: i < lists.length - 1 ? `继续下一轮...` : `所有链表合并完成！`,
+          x: 50,
+          y: 70,
+          type: 'info',
+        },
+      ],
+    });
     
     result = merged;
   }
@@ -271,20 +532,43 @@ export function generateSequentialSteps(lists: number[][]): AlgorithmStep[] {
   
   steps.push({
     id: steps.length,
-    description: `合并完成！结果链表：[${result.join(' → ')}]`,
+    description: `🎉 合并完成！最终结果：[${result.join(' → ')}]`,
     nodes: finalNodes,
     edges: JSON.parse(JSON.stringify(initialEdges)),
-    resultNodes: createResultNodes(result, 100, 400),
+    resultNodes: createResultNodes(result, LAYOUT.startX, LAYOUT.resultY),
     resultEdges: createResultEdges(result.length),
     highlightedLines: { java: [6], python: [6], golang: [6], javascript: [5] },
     variables: { 'result': `[${result.join(', ')}]` },
-    annotations: [{
-      id: 'complete',
-      text: '合并完成！',
-      x: 100 + result.length * 40,
-      y: 380,
-      type: 'result',
-    }],
+    annotations: [
+      {
+        id: 'complete-title',
+        text: '🎉 顺序合并完成！',
+        x: 50,
+        y: 20,
+        type: 'result',
+      },
+      {
+        id: 'complete-summary',
+        text: `共进行了 ${lists.length} 轮合并`,
+        x: 50,
+        y: 45,
+        type: 'info',
+      },
+      {
+        id: 'complete-result',
+        text: `最终结果：${result.length} 个节点`,
+        x: 50,
+        y: 70,
+        type: 'result',
+      },
+      {
+        id: 'complete-complexity',
+        text: `时间复杂度：O(k²n)`,
+        x: 50,
+        y: 95,
+        type: 'info',
+      },
+    ],
   });
   
   return steps;
@@ -295,7 +579,7 @@ function createResultNodes(values: number[], startX: number, y: number, highligh
   return values.map((val, index) => ({
     id: `result-${index}`,
     val,
-    x: startX + index * 70,
+    x: startX + index * LAYOUT.resultNodeSpacing,
     y,
     listIndex: -1,
     nodeIndex: index,
@@ -339,7 +623,9 @@ export function generateDivideConquerSteps(lists: number[][]): AlgorithmStep[] {
     return steps;
   }
   
-  const { nodes: initialNodes, edges: initialEdges } = calculateListLayout(lists, 100, 80, 80, 100);
+  const { nodes: initialNodes, edges: initialEdges } = calculateListLayout(
+    lists, LAYOUT.startX, LAYOUT.startY, LAYOUT.nodeSpacing, LAYOUT.listSpacing
+  );
   
   // 初始状态
   steps.push({
@@ -374,15 +660,15 @@ export function generateDivideConquerSteps(lists: number[][]): AlgorithmStep[] {
     description: `分治合并完成！结果链表：[${result.join(' → ')}]`,
     nodes: finalNodes,
     edges: JSON.parse(JSON.stringify(initialEdges)),
-    resultNodes: createResultNodes(result, 100, 400),
+    resultNodes: createResultNodes(result, LAYOUT.startX, LAYOUT.resultY),
     resultEdges: createResultEdges(result.length),
     highlightedLines: { java: [3], python: [5], golang: [2], javascript: [2] },
     variables: { 'result': `[${result.join(', ')}]` },
     annotations: [{
       id: 'complete',
       text: '分治合并完成！',
-      x: 100 + result.length * 40,
-      y: 380,
+      x: LAYOUT.startX + result.length * 50,
+      y: LAYOUT.resultY - 30,
       type: 'result',
     }],
   });
@@ -420,8 +706,8 @@ function divideConquerRecursive(
       annotations: [{
         id: `leaf-${l}`,
         text: `叶子节点`,
-        x: 100,
-        y: 80 + l * 100 - 20,
+        x: LAYOUT.startX,
+        y: LAYOUT.startY + l * LAYOUT.listSpacing - 25,
         type: 'info',
       }],
     });
@@ -453,8 +739,8 @@ function divideConquerRecursive(
     annotations: [{
       id: `split-${l}-${r}`,
       text: `mid = ${mid}`,
-      x: 400,
-      y: 80 + mid * 100,
+      x: 500,
+      y: LAYOUT.startY + mid * LAYOUT.listSpacing,
       type: 'info',
     }],
   });
@@ -480,7 +766,7 @@ function divideConquerRecursive(
     description: `合并：[${leftResult.join(', ')}] + [${rightResult.join(', ')}] = [${merged.join(', ')}]`,
     nodes: mergeNodes,
     edges: JSON.parse(JSON.stringify(initialEdges)),
-    resultNodes: createResultNodes(merged, 100, 350 + depth * 50),
+    resultNodes: createResultNodes(merged, LAYOUT.startX, LAYOUT.resultY - 80 + depth * 60),
     resultEdges: createResultEdges(merged.length),
     highlightedLines: { java: [8, 9, 10, 11], python: [10, 11, 12, 13], golang: [7, 8, 9, 10], javascript: [5, 6, 7, 8] },
     variables: { 
@@ -492,8 +778,8 @@ function divideConquerRecursive(
     annotations: [{
       id: `merge-${l}-${r}`,
       text: `合并深度 ${depth}`,
-      x: 100 + merged.length * 35,
-      y: 330 + depth * 50,
+      x: LAYOUT.startX + merged.length * 50,
+      y: LAYOUT.resultY - 100 + depth * 60,
       type: 'result',
     }],
   });
@@ -536,7 +822,9 @@ export function generatePriorityQueueSteps(lists: number[][]): AlgorithmStep[] {
     return steps;
   }
   
-  const { nodes: initialNodes, edges: initialEdges } = calculateListLayout(lists, 100, 80, 80, 100);
+  const { nodes: initialNodes, edges: initialEdges } = calculateListLayout(
+    lists, LAYOUT.startX, LAYOUT.startY, LAYOUT.nodeSpacing, LAYOUT.listSpacing
+  );
   
   // 初始状态
   steps.push({
@@ -589,8 +877,8 @@ export function generatePriorityQueueSteps(lists: number[][]): AlgorithmStep[] {
     annotations: heap.map((h, i) => ({
       id: `heap-init-${i}`,
       text: `入堆`,
-      x: 100 - 30,
-      y: 80 + h.listIndex * 100,
+      x: LAYOUT.startX - 30,
+      y: LAYOUT.startY + h.listIndex * LAYOUT.listSpacing,
       type: 'move' as const,
     })),
   });
@@ -619,7 +907,7 @@ export function generatePriorityQueueSteps(lists: number[][]): AlgorithmStep[] {
       description: `从堆中取出最小值 ${min.val}，加入结果链表`,
       nodes: popNodes,
       edges: JSON.parse(JSON.stringify(initialEdges)),
-      resultNodes: createResultNodes(result, 100, 400, result.length - 1),
+      resultNodes: createResultNodes(result, LAYOUT.startX, LAYOUT.resultY, result.length - 1),
       resultEdges: createResultEdges(result.length),
       highlightedLines: { java: [12, 13, 14], python: [12, 13, 14], golang: [14, 15, 16], javascript: [8, 9, 10] },
       variables: { 
@@ -630,8 +918,8 @@ export function generatePriorityQueueSteps(lists: number[][]): AlgorithmStep[] {
       annotations: [{
         id: `pop-${steps.length}`,
         text: `取出 ${min.val}`,
-        x: 100 + min.nodeIndex * 80 + 40,
-        y: 80 + min.listIndex * 100 - 25,
+        x: LAYOUT.startX + min.nodeIndex * LAYOUT.nodeSpacing + 50,
+        y: LAYOUT.startY + min.listIndex * LAYOUT.listSpacing - 30,
         type: 'move',
       }],
     });
@@ -658,7 +946,7 @@ export function generatePriorityQueueSteps(lists: number[][]): AlgorithmStep[] {
         description: `将下一个节点 ${nextVal} 加入优先队列`,
         nodes: pushNodes,
         edges: JSON.parse(JSON.stringify(initialEdges)),
-        resultNodes: createResultNodes(result, 100, 400),
+        resultNodes: createResultNodes(result, LAYOUT.startX, LAYOUT.resultY),
         resultEdges: createResultEdges(result.length),
         highlightedLines: { java: [15, 16, 17], python: [15, 16, 17], golang: [17, 18, 19], javascript: [11, 12] },
         variables: { 
@@ -668,8 +956,8 @@ export function generatePriorityQueueSteps(lists: number[][]): AlgorithmStep[] {
         annotations: [{
           id: `push-${steps.length}`,
           text: `入堆 ${nextVal}`,
-          x: 100 + nextIndex * 80 - 30,
-          y: 80 + min.listIndex * 100,
+          x: LAYOUT.startX + nextIndex * LAYOUT.nodeSpacing - 30,
+          y: LAYOUT.startY + min.listIndex * LAYOUT.listSpacing,
           type: 'move',
         }],
       });
@@ -687,15 +975,15 @@ export function generatePriorityQueueSteps(lists: number[][]): AlgorithmStep[] {
     description: `优先队列合并完成！结果链表：[${result.join(' → ')}]`,
     nodes: finalNodes,
     edges: JSON.parse(JSON.stringify(initialEdges)),
-    resultNodes: createResultNodes(result, 100, 400),
+    resultNodes: createResultNodes(result, LAYOUT.startX, LAYOUT.resultY),
     resultEdges: createResultEdges(result.length),
     highlightedLines: { java: [19], python: [19], golang: [21], javascript: [14] },
     variables: { 'result': `[${result.join(', ')}]` },
     annotations: [{
       id: 'complete',
       text: '合并完成！',
-      x: 100 + result.length * 40,
-      y: 380,
+      x: LAYOUT.startX + result.length * 50,
+      y: LAYOUT.resultY - 30,
       type: 'result',
     }],
   });
