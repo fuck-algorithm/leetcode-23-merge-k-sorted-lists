@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getGitHubStars, getGitHubUrl } from '../../utils/github';
-import { algorithmDescriptions, algorithmNames } from '../../algorithms/codes';
+import { algorithmNames } from '../../algorithms/codes';
 import { useStore } from '../../store/useStore';
+import { AlgorithmModal } from '../AlgorithmModal';
 import './Header.css';
 
 export function Header() {
@@ -68,24 +69,11 @@ export function Header() {
       </div>
 
       {showAlgorithmInfo && (
-        <div className="modal-overlay" onClick={() => setShowAlgorithmInfo(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{algorithmNames[algorithmType]} - 算法思路</h2>
-              <button
-                className="modal-close"
-                onClick={() => setShowAlgorithmInfo(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <pre className="algorithm-description">
-                {algorithmDescriptions[algorithmType]}
-              </pre>
-            </div>
-          </div>
-        </div>
+        <AlgorithmModal
+          algorithmType={algorithmType}
+          algorithmName={algorithmNames[algorithmType]}
+          onClose={() => setShowAlgorithmInfo(false)}
+        />
       )}
     </header>
   );
