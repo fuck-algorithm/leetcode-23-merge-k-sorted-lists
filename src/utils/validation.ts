@@ -122,25 +122,45 @@ export function generateRandomData(): number[][] {
 }
 
 // 预设数据样例
-export const presetExamples: { name: string; data: number[][] }[] = [
+export const presetExamples: { name: string; data: number[][]; desc: string }[] = [
   {
-    name: '示例1',
+    name: '经典3链表交叉',
     data: [[1, 4, 5], [1, 3, 4], [2, 6]],
+    desc: 'LeetCode经典示例：3个链表元素交叉分布，需要频繁比较切换',
   },
   {
-    name: '示例2',
-    data: [],
-  },
-  {
-    name: '示例3',
-    data: [[]],
-  },
-  {
-    name: '两个链表',
+    name: '双链表交替',
     data: [[1, 2, 4], [1, 3, 5]],
+    desc: '基础示例：2个链表元素交替出现，适合理解合并过程',
   },
   {
-    name: '单链表',
+    name: '单链表直通',
     data: [[1, 2, 3, 4, 5]],
+    desc: '边界情况：只有1个链表，无需合并直接返回',
+  },
+  {
+    name: '空数组',
+    data: [],
+    desc: '边界情况：输入为空数组，返回空结果',
+  },
+  {
+    name: '含空链表',
+    data: [[]],
+    desc: '边界情况：包含空链表，需要正确处理空节点',
+  },
+  {
+    name: '长度悬殊',
+    data: [[1], [2, 3, 4, 5, 6, 7, 8]],
+    desc: '特殊情况：链表长度差异大，短链表先耗尽',
+  },
+  {
+    name: '多空链表混合',
+    data: [[], [1, 2], [], [3, 4], []],
+    desc: '复杂边界：多个空链表与非空链表混合',
+  },
+  {
+    name: '负数链表',
+    data: [[-5, -3, -1], [-4, -2, 0], [-6, 1, 2]],
+    desc: '负数示例：包含负数的有序链表合并',
   },
 ];

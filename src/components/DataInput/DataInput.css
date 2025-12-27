@@ -7,7 +7,14 @@
 .input-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.presets-divider {
+  width: 1px;
+  height: 20px;
+  background: #4a5568;
+  margin: 0 4px;
 }
 
 .input-label {
@@ -78,13 +85,6 @@
   padding-left: 70px;
 }
 
-.presets-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
 .presets-label {
   color: #718096;
   font-size: 12px;
@@ -92,7 +92,7 @@
 }
 
 .preset-btn {
-  padding: 4px 10px;
+  padding: 4px 8px;
   background: #2d3748;
   border: 1px solid #4a5568;
   border-radius: 4px;
@@ -100,6 +100,7 @@
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .preset-btn:hover {

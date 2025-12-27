@@ -62,22 +62,20 @@ export function DataInput() {
         <button className="random-btn" onClick={handleRandomClick}>
           随机生成
         </button>
-      </div>
-      
-      {error && <div className="error-message">{error}</div>}
-      
-      <div className="presets-row">
+        <div className="presets-divider" />
         <span className="presets-label">预设样例：</span>
         {presetExamples.map((example, index) => (
           <button
             key={index}
             className="preset-btn"
             onClick={() => handlePresetClick(example.data)}
+            title={`${example.desc}\n数据: ${JSON.stringify(example.data)}`}
           >
             {example.name}
           </button>
         ))}
       </div>
+      {error && <div className="error-message">{error}</div>}
     </div>
   );
 }
