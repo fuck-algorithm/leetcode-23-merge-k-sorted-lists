@@ -1,8 +1,13 @@
 import { useStore } from '../../store/useStore';
 import type { CodeLanguage } from '../../types';
 import { algorithmCodes } from '../../algorithms/codes';
-import { Highlight, themes } from 'prism-react-renderer';
+import { Highlight, themes, Prism } from 'prism-react-renderer';
 import './CodePanel.css';
+
+// 添加 Java 语言支持
+(typeof globalThis !== "undefined" ? globalThis : window).Prism = Prism;
+// @ts-expect-error - prismjs 组件没有类型定义
+import('prismjs/components/prism-java');
 
 const languages: { key: CodeLanguage; label: string }[] = [
   { key: 'java', label: 'Java' },
