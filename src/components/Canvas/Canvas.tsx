@@ -29,14 +29,33 @@ const COLORS = {
 };
 
 // 图例配置 - 用于解释各种颜色的含义
-const LEGEND_ITEMS = [
-  { color: COLORS.mergingA, label: '🟣 A链表 (ans)', description: '正在合并的结果链表' },
-  { color: COLORS.mergingB, label: '🟠 B链表', description: '正在合并的当前链表' },
-  { color: COLORS.current, label: '🔴 当前指针', description: '正在比较的节点' },
-  { color: COLORS.pending, label: '⚪ 待处理', description: '等待合并的链表' },
-  { color: COLORS.processed, label: '⬛ 已完成', description: '已合并完成的链表' },
-  { color: COLORS.result, label: '🟢 结果', description: '最终合并结果' },
-];
+const LEGEND_ITEMS = {
+  sequential: [
+    { color: COLORS.mergingA, label: '🟣 A链表 (ans)', description: '正在合并的结果链表' },
+    { color: COLORS.mergingB, label: '🟠 B链表', description: '正在合并的当前链表' },
+    { color: COLORS.current, label: '🔴 当前指针', description: '正在比较的节点' },
+    { color: COLORS.pending, label: '⚪ 待处理', description: '等待合并的链表' },
+    { color: COLORS.processed, label: '⬛ 已完成', description: '已合并完成的链表' },
+    { color: COLORS.result, label: '🟢 结果', description: '最终合并结果' },
+  ],
+  divideConquer: [
+    { color: COLORS.mergingA, label: '🟣 左半部分', description: '分治的左半部分' },
+    { color: COLORS.mergingB, label: '🟠 右半部分', description: '分治的右半部分' },
+    { color: COLORS.highlighted, label: '🟡 当前处理', description: '当前正在处理的链表' },
+    { color: COLORS.current, label: '🔴 当前节点', description: '当前操作的节点' },
+    { color: COLORS.pending, label: '⚪ 待处理', description: '等待处理的链表' },
+    { color: COLORS.processed, label: '⬛ 已完成', description: '已处理完成的链表' },
+    { color: COLORS.result, label: '🟢 合并结果', description: '合并后的结果' },
+  ],
+  priorityQueue: [
+    { color: COLORS.highlighted, label: '🔵 在堆中', description: '当前在优先队列中的节点' },
+    { color: COLORS.current, label: '🔴 取出', description: '从堆中取出的最小节点' },
+    { color: COLORS.mergingB, label: '🟠 入堆', description: '即将加入堆的节点' },
+    { color: COLORS.pending, label: '⚪ 待处理', description: '等待处理的节点' },
+    { color: COLORS.processed, label: '⬛ 已完成', description: '已加入结果的节点' },
+    { color: COLORS.result, label: '🟢 结果', description: '最终合并结果' },
+  ],
+};
 
 export function Canvas() {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -167,19 +186,24 @@ export function Canvas() {
           height={dimensions.height - 40}
           className="canvas-svg"
         />
-        {/* 图例面板 */}
-        {showLegend && algorithmType === 'sequential' && (
+        {/* 图例面板 - 支持所有算法类型 */}
+        {showLegend && (
           <div className="canvas-legend">
-            <div className="legend-title">配色说明</div>
+            <div className="legend-title">
+              {algorithmType === 'sequential' ? '顺序合并配色' : 
+               algorithmType === 'divideConquer' ? '分治合并配色' : '优先队列配色'}
+            </div>
             <div className="legend-items">
-              {LEGEND_ITEMS.map((item, index) => {
+              {LEGEND_ITEMS[algorithmType].map((item, index) => {
                 // 根据当前状态决定是否显示某些图例项
-                // 合并状态时显示A/B链表，非合并状态时显示结果
-                if (item.label.includes('A链表') || item.label.includes('B链表')) {
-                  if (!isMergingState) return null;
-                }
-                if (item.label.includes('结果') && isMergingState) {
-                  return null;
+                if (algorithmType === 'sequential') {
+                  // 合并状态时显示A/B链表，非合并状态时显示结果
+                  if (item.label.includes('A链表') || item.label.includes('B链表')) {
+                    if (!isMergingState) return null;
+                  }
+                  if (item.label.includes('结果') && isMergingState) {
+                    return null;
+                  }
                 }
                 return (
                   <div key={index} className="legend-item">
@@ -192,9 +216,19 @@ export function Canvas() {
                 );
               })}
             </div>
-            {isMergingState && (
+            {algorithmType === 'sequential' && isMergingState && (
               <div className="legend-hint">
                 💡 紫色=ans链表，橙色=当前合并链表
+              </div>
+            )}
+            {algorithmType === 'divideConquer' && (
+              <div className="legend-hint">
+                💡 分治：先分割后合并，自底向上
+              </div>
+            )}
+            {algorithmType === 'priorityQueue' && (
+              <div className="legend-hint">
+                💡 堆顶始终是当前最小值
               </div>
             )}
           </div>
