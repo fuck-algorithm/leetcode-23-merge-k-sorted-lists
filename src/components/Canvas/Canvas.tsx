@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useStore } from '../../store/useStore';
 import type { VisualNode, VisualEdge, Annotation } from '../../types';
+import { ExplanationPanel } from '../ExplanationPanel';
 import './Canvas.css';
 
 // 颜色配置 - 优化配色方案，让正在合并的两个链表更容易区分
@@ -146,60 +147,63 @@ export function Canvas() {
   }, [currentStep, dimensions]);
 
   return (
-    <div className="canvas-container" ref={containerRef}>
-      <div className="canvas-header">
-        <span className="step-description">
-          {currentStep?.description || '准备开始...'}
-        </span>
-        <button 
-          className="legend-toggle"
-          onClick={() => setShowLegend(!showLegend)}
-          title={showLegend ? '隐藏图例' : '显示图例'}
-        >
-          {showLegend ? '🎨 隐藏图例' : '🎨 显示图例'}
-        </button>
-      </div>
-      <svg
-        ref={svgRef}
-        width={dimensions.width}
-        height={dimensions.height - 40}
-        className="canvas-svg"
-      />
-      {/* 图例面板 */}
-      {showLegend && algorithmType === 'sequential' && (
-        <div className="canvas-legend">
-          <div className="legend-title">配色说明</div>
-          <div className="legend-items">
-            {LEGEND_ITEMS.map((item, index) => {
-              // 根据当前状态决定是否显示某些图例项
-              // 合并状态时显示A/B链表，非合并状态时显示结果
-              if (item.label.includes('A链表') || item.label.includes('B链表')) {
-                if (!isMergingState) return null;
-              }
-              if (item.label.includes('结果') && isMergingState) {
-                return null;
-              }
-              return (
-                <div key={index} className="legend-item">
-                  <span 
-                    className="legend-color" 
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="legend-label">{item.label}</span>
-                </div>
-              );
-            })}
-          </div>
-          {isMergingState && (
-            <div className="legend-hint">
-              💡 紫色=ans链表，橙色=当前合并链表
-            </div>
-          )}
+    <div className="canvas-wrapper">
+      <div className="canvas-container" ref={containerRef}>
+        <div className="canvas-header">
+          <span className="step-description">
+            {currentStep?.description || '准备开始...'}
+          </span>
+          <button 
+            className="legend-toggle"
+            onClick={() => setShowLegend(!showLegend)}
+            title={showLegend ? '隐藏图例' : '显示图例'}
+          >
+            {showLegend ? '🎨 隐藏图例' : '🎨 显示图例'}
+          </button>
         </div>
-      )}
-      <div className="canvas-hint">
-        拖拽平移 · 滚轮缩放
+        <svg
+          ref={svgRef}
+          width={dimensions.width}
+          height={dimensions.height - 40}
+          className="canvas-svg"
+        />
+        {/* 图例面板 */}
+        {showLegend && algorithmType === 'sequential' && (
+          <div className="canvas-legend">
+            <div className="legend-title">配色说明</div>
+            <div className="legend-items">
+              {LEGEND_ITEMS.map((item, index) => {
+                // 根据当前状态决定是否显示某些图例项
+                // 合并状态时显示A/B链表，非合并状态时显示结果
+                if (item.label.includes('A链表') || item.label.includes('B链表')) {
+                  if (!isMergingState) return null;
+                }
+                if (item.label.includes('结果') && isMergingState) {
+                  return null;
+                }
+                return (
+                  <div key={index} className="legend-item">
+                    <span 
+                      className="legend-color" 
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="legend-label">{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            {isMergingState && (
+              <div className="legend-hint">
+                💡 紫色=ans链表，橙色=当前合并链表
+              </div>
+            )}
+          </div>
+        )}
+        <div className="canvas-hint">
+          拖拽平移 · 滚轮缩放
+        </div>
       </div>
+      <ExplanationPanel />
     </div>
   );
 }

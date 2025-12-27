@@ -1,3 +1,11 @@
+.canvas-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
 .canvas-container {
   flex: 1;
   display: flex;
@@ -7,6 +15,7 @@
   border: 1px solid #2d3748;
   overflow: hidden;
   position: relative;
+  min-height: 0;
 }
 
 .canvas-header {
