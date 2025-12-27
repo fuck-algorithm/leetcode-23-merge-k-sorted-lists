@@ -13,12 +13,33 @@
   padding: 10px 16px;
   background: rgba(22, 33, 62, 0.8);
   border-bottom: 1px solid #2d3748;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .step-description {
   color: #e2e8f0;
   font-size: 14px;
   font-weight: 500;
+  flex: 1;
+}
+
+.legend-toggle {
+  background: rgba(99, 179, 237, 0.15);
+  border: 1px solid rgba(99, 179, 237, 0.3);
+  color: #63b3ed;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.legend-toggle:hover {
+  background: rgba(99, 179, 237, 0.25);
+  border-color: rgba(99, 179, 237, 0.5);
 }
 
 .canvas-svg {
@@ -28,6 +49,64 @@
 
 .canvas-svg:active {
   cursor: grabbing;
+}
+
+/* 图例面板样式 */
+.canvas-legend {
+  position: absolute;
+  top: 55px;
+  right: 12px;
+  background: rgba(22, 33, 62, 0.95);
+  border: 1px solid #3d4f6f;
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.legend-title {
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #3d4f6f;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.legend-label {
+  color: #cbd5e0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.legend-hint {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #3d4f6f;
+  color: #f6ad55;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .canvas-hint {

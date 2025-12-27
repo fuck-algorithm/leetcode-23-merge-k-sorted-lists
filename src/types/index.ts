@@ -16,6 +16,9 @@ export interface VisualNode {
   isHighlighted: boolean;
   isProcessed: boolean;
   isCurrent: boolean;
+  isMergingA?: boolean; // 是否是正在合并的A链表（ans链表）的节点
+  isMergingB?: boolean; // 是否是正在合并的B链表（当前链表）的节点
+  isPending?: boolean;  // 是否是待处理的链表（未参与合并）
   label?: string;
 }
 
