@@ -118,9 +118,9 @@
 .modal-content {
   background: #1a1a2e;
   border-radius: 12px;
-  max-width: 600px;
+  max-width: 700px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 85vh;
   overflow: hidden;
   border: 1px solid #2d3748;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -156,15 +156,15 @@
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 20px 24px;
   overflow-y: auto;
-  max-height: calc(80vh - 60px);
+  max-height: calc(85vh - 60px);
 }
 
 .algorithm-description {
   color: #e2e8f0;
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 1.9;
   white-space: pre-wrap;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
